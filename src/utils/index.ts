@@ -9,121 +9,98 @@ import {
   State,
 } from "../types";
 
-export const GetRegions = async (src?: string): Promise<Region[] | []> => {
-  let url = "/data/regionsminified.json";
-  if (src) url = src + "/regionsminified.json";
-  const regions = await fetch(url).then((res) => res.json());
-  return regions as Array<Region>;
+// Import dữ liệu từ các file JSON local
+import regionsData from "../data/regionsminified.json";
+import countriesData from "../data/countriesminified.json";
+import languagesData from "../data/languagesminified.json";
+import statesData from "../data/statesminified.json";
+import citiesData from "../data/citiesminified.json";
+
+// Lấy danh sách các khu vực (regions)
+export const GetRegions = async (): Promise<Region[] | []> => {
+  return regionsData as unknown as Array<Region>;
 };
+
+// Lấy mã điện thoại theo khu vực (region)
 export const GetPhonecodesByRegion = async (
-  _region: string,
-  src?: string
+  _region: string
 ): Promise<Phonecodes[] | []> => {
-  let url = "/data/countries minified.json";
-  if (src) url = src + "/countriesminified.json";
-  const countries = await fetch(url).then((res) => res.json());
-  let filtered = countries as Array<Phonecodes>;
+  let filtered = countriesData as Array<Phonecodes>;
   if (_region) {
-    filtered = filtered.filter((country: Phonecodes) => {
-      return country.region === _region;
-    });
+    filtered = filtered.filter(
+      (country: Phonecodes) => country.region === _region
+    );
   }
-  return filtered.map((item) => {
-    return {
-      id: item.id,
-      name: item.name,
-      phone_code: item.phone_code,
-      region: item.region,
-    };
-  });
+  return filtered.map((item) => ({
+    id: item.id,
+    name: item.name,
+    phone_code: item.phone_code,
+    region: item.region,
+  }));
 };
-export const GetPhonecodes = async (
-  src?: string
-): Promise<Phonecodes[] | []> => {
-  let url = "/data/countriesminified.json";
-  if (src) url = src + "/countriesminified.json";
-  const countries = await fetch(url).then((res) => res.json());
-  const filtered = countries as Array<Phonecodes>;
-  return filtered.map((item) => {
-    return {
-      id: item.id,
-      name: item.name,
-      phone_code: item.phone_code,
-      region: item.region,
-    };
-  });
+
+// Lấy tất cả mã điện thoại
+export const GetPhonecodes = async (): Promise<Phonecodes[] | []> => {
+  const filtered = countriesData as Array<Phonecodes>;
+  return filtered.map((item) => ({
+    id: item.id,
+    name: item.name,
+    phone_code: item.phone_code,
+    region: item.region,
+  }));
 };
+
+// Lấy danh sách các quốc gia theo khu vực (region)
 export const GetCountriesByRegion = async (
-  _region: string,
-  src?: string
+  _region: string
 ): Promise<Country[] | []> => {
-  let url = "/data/countriesminified.json";
-  if (src) url = src + "/countriesminified.json";
-  const countries = await fetch(url).then((res) => res.json());
-  let filtered = countries as Array<Country>;
+  let filtered = countriesData as Array<Country>;
   if (_region) {
-    filtered = filtered.filter((country: Country) => {
-      return country.region === _region;
-    });
+    filtered = filtered.filter(
+      (country: Country) => country.region === _region
+    );
   }
   return filtered;
 };
-export const GetCountries = async (src?: string): Promise<Country[] | []> => {
-  let url = "/data/countriesminified.json";
-  if (src) url = src + "/countriesminified.json";
-  const countries = await fetch(url).then((res) => res.json());
-  return countries as Array<Country>;
+
+// Lấy danh sách tất cả các quốc gia
+export const GetCountries = async (): Promise<Country[] | []> => {
+  return countriesData as Array<Country>;
 };
 
-export const GetLanguages = async (src?: string): Promise<Language[] | []> => {
-  let url = "/data/languagesminified.json";
-  if (src) url = src + "/languagesminified.json";
-  const languages = await fetch(url).then((res) => res.json());
-  return languages as Array<Language>;
+// Lấy danh sách các ngôn ngữ
+export const GetLanguages = async (): Promise<Language[] | []> => {
+  return languagesData as Array<Language>;
 };
 
-export const GetState = async (
-  id: number,
-  src?: string
-): Promise<Array<State> | []> => {
-  let url = "/data/statesminified.json";
-  if (src) url = src + "/statesminified.json";
-  const states = await fetch(url).then((res) => res.json());
-  const record = states as Array<CountryState>;
+// Lấy danh sách các bang (states) dựa trên ID quốc gia
+export const GetState = async (id: number): Promise<Array<State> | []> => {
+  const record = statesData as Array<CountryState>;
   const statesone = record.find((e: CountryState) => e.id === id);
-  const state = statesone && statesone.states ? statesone.states : [];
-  return state;
+  return statesone && statesone.states ? statesone.states : [];
 };
 
+// Lấy danh sách các thành phố (cities) dựa trên ID quốc gia và ID bang
 export const GetCity = async (
   countryid: number,
-  stateid: number,
-  src?: string
+  stateid: number
 ): Promise<Array<City> | []> => {
-  let url = "/data/citiesminified.json";
-  if (src) url = src + "/citiesminified.json";
-  const cities = await fetch(url).then((res) => res.json());
-  const record = cities as Array<CountryStateCity>;
-  const countries = record.find((e: CountryStateCity) => e.id === countryid);
-  if (countries) {
-    const states = countries && countries.states ? countries.states : [];
-    const city = states.find((e) => e.id === stateid);
-    return city && city.cities ? city.cities : [];
-  } else {
-    return [];
+  const record = citiesData as Array<CountryStateCity>;
+  const country = record.find((e: CountryStateCity) => e.id === countryid);
+  if (country) {
+    const state = country.states.find((e) => e.id === stateid);
+    return state && state.cities ? state.cities : [];
   }
+  return [];
 };
-export const GetAllCities = async (src?: string): Promise<Array<City> | []> => {
-  let url = "/data/citiesminified.json";
-  if (src) url = src + "/citiesminified.json";
-  const cities = await fetch(url).then((res) => res.json());
-  const record = cities as Array<CountryStateCity>;
-  const allCities = [];
+
+// Lấy danh sách tất cả các thành phố (cities)
+export const GetAllCities = async (): Promise<Array<City> | []> => {
+  const record = citiesData as Array<CountryStateCity>;
+  const allCities: Array<City> = [];
   for (const country of record) {
     for (const state of country.states) {
-      for (const city of state.cities) {
-        allCities.push(city);
-      }
+      allCities.push(...state.cities);
     }
   }
   return allCities;
